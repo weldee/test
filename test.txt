@@ -1,0 +1,117 @@
+if (!($ = window.jQuery)) {
+    script = document.createElement('script');
+    script.src = 'https://ajax.googleapis.com/ajax/libs/jquery/1/jquery.min.js';
+    script.onload=startMain;
+    document.body.appendChild(script);
+    console.log("jQuery loaded");
+}
+else {
+    console.log("jQuery already loaded");
+    startMain();
+}
+
+function startMain() {
+
+    // appends file input elements
+    $("body").append('<input type="file" id="file-input" style="position:fixed;top:30px;right:10px;" />');
+    $("body").append('<pre id="file-content"></pre>');
+    
+    // add listener for input elements
+    document.getElementById('file-input')
+        .addEventListener('change', readSingleFile, false);
+
+    function readSingleFile(e) {
+        var file = e.target.files[0];
+        if (!file) {
+            return;
+        }
+        var reader = new FileReader();
+        reader.onload = function(e) {
+            console.log("data successfully loaded");
+            var contents = e.target.result;
+            displayContents(contents);
+            startUpdate();
+        };
+        reader.readAsText(file);
+    }
+    
+    function displayContents(contents) {
+        var element = document.getElementById('file-content');
+        element.innerHTML = contents;
+    }
+
+    function startUpdate() {
+        var classId = getClassId();
+        var day = getDay();
+        updateAbsence(classId, day);
+    }
+    
+    //checks specific element to identify which class it is.
+    function getClassId() {
+        var classIdElem = $('#ctl00_m_g_e5943e96_d70e_4847_9b9d_ddb94dbbd1bf_ctl00_tblLessonReport > tbody > tr > td.ms-formbody').eq(4).html();
+
+        if(typeof(classIdElem) === "undefined") {
+        	console.log("Could not fetch class identifier");
+        }
+        else if(classIdElem.trim() == "SA7") {
+                return '#klass0';
+        }
+        else if(classIdElem.trim() == "SA8") {
+                return '#klass1';
+        }
+        else if(classIdElem.trim() == "SA9"){
+                return '#klass2';
+        }
+        else if(classIdElem.trim() == "SA1"){
+                return '#klass3';
+        }
+        else if(classIdElem.trim() == "SA2"){
+                return '#klass4';
+        }
+        else if(classIdElem.trim() == "SA3"){
+                return '#klass5';
+        }
+        else {
+            console.log('No valid class identifier found');
+        }
+    }
+    
+    function getDay() {
+        var dayElem = $('#ctl00_m_g_dd197233_c113_4c6c_82aa_d81169d74c15 > span > span > table > tbody > tr > td > div');
+        var dayRegex = dayElem.text().match(/(måndag|tisdag|onsdag|torsdag|fredag)/g);
+        if(dayRegex !== null){
+	    // monday
+	    if(dayRegex[0].contains('å')){
+	        return "mandag";
+	    }
+	    else {
+                return dayRegex[0];
+	    }
+        }
+        else {
+            console.log("Could not fetch day");
+        }
+    }
+
+    // update students absence for given class-identifier and day
+    // p1: class-identifier
+    // p2: day
+    function updateAbsence(p1, p2) {
+        $('#ctl00_m_g_e5943e96_d70e_4847_9b9d_ddb94dbbd1bf_ctl00_pnlStudentReports > table > tbody > tr').each(function(i) {
+            var name = $('td > a', this).text();
+            var dropDownElem = $('td > select', this);
+            
+            //compare name with name from excel
+            // if match, check and update absence
+            var excelName = $(p1).find("#name:contains('"+name+"')");
+            if(excelName.length === 1) {
+                var absence = excelName.parent().children("#"+p2).text();
+                // sets dropdown value to correct value if invalid absence
+                if(absence === "" 
+                    && (dropDownElem.val(0) !== "3" && dropDownElem.val() !== "0")){
+                    dropDownElem.val(0);
+                }
+            }
+        })
+    }
+}
