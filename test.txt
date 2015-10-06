@@ -108,7 +108,7 @@ function startMain() {
                 var absence = excelName.parent().children("#"+p2).text();
                 // sets dropdown value to correct value if invalid absence
                 if(absence === "" 
-                    && (dropDownElem.val(0) !== "3" && dropDownElem.val() !== "0")){
+                    && (dropDownElem.val() !== "3" && dropDownElem.val() !== "4")){
                     dropDownElem.val(0);
                 }
             }
